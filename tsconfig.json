@@ -2,7 +2,6 @@
   "exclude": [
     "node_modules",
     "build",
-    "src/test",
     "jest.config.js"
   ],
   "include": [
@@ -34,11 +33,6 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "paths": {
-      "~*": [
-        "src/*"
-      ]
-    },
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowJs": true
