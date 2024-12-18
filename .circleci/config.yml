@@ -877,7 +877,6 @@ workflows:
             #- test-functional
             - vulnerability-check
             - audit-licenses
-            - test-integration
             - license-scan
             - image-scan
           filters:
