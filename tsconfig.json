@@ -8,33 +8,31 @@
     "src/*",
     "src/apispec/api.json"
   ],
+  "compileOnSave": false,
   "compilerOptions": {
-    "target": "es2019",
+    "outDir": "./dist",
+    "rootDir": ".",
+    // prevents this tsconfig from compiling any files
+    "target": "ES2022",
     "module": "commonjs",
+    "types": [
+      "node",
+      "jest"
+    ],
     "lib": [
-      "ES2019"
+      "ES2022"
     ],
     "importHelpers": true,
     "declaration": true,
     "sourceMap": true,
-    "noEmit": false,
-    "rootDir": "./src",
-    "outDir": "build",
+    "skipLibCheck": true,
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
     "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    // Needed for CommonJS modules
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "baseUrl": "./",
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "allowJs": true
-  },
+    "esModuleInterop": true
+  }
 }

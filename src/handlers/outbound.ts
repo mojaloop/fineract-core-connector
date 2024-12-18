@@ -12,11 +12,11 @@
  *************************************************************************/
 
 
-import { ApiContext } from '~/types';
+import { ApiContext } from '../types';
 
 
 // eslint-disable-next-line no-async-promise-executor
-const sendMoney = async (ctx: ApiContext): Promise<unknown> => new Promise(async resolve => {
+const sendMoney = async (ctx: ApiContext): Promise<unknown> => new Promise<void>(async resolve => {
     const response = {
         idType: ctx.params.idType,
         idValue: ctx.params.idValue,

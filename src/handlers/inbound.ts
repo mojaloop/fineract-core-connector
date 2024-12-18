@@ -12,16 +12,15 @@
  *************************************************************************/
 
 import * as util from 'util';
-import { ApiContext } from '~/types';
-import { IPostQuoteRequestBody, IPostQuoteResponseBody, IPostTransferRequestBody } from '~/interfaces/inbound';
+import { ApiContext } from '../types';
+import { IPostQuoteRequestBody, IPostQuoteResponseBody, IPostTransferRequestBody, PartyIdType } from '../interfaces';
 import {
     IFineractClient,
     IFineractClientAccounts,
     IFineractPostTransactionResponse,
     IFineractSearchResponse,
-} from '~/interfaces/fineract';
-import { IGeneralError } from '~/errors';
-import { PartyIdType } from '../interfaces';
+} from '../interfaces';
+import { IGeneralError } from '../errors';
 import { InboundRequester, RequesterOptions } from '../requests';
 
 
@@ -246,7 +245,7 @@ const postTransfers = async (ctx: ApiContext): Promise<void> => {
 
 
 // eslint-disable-next-line no-async-promise-executor
-const getParties = async (ctx: ApiContext): Promise<unknown> => new Promise(async resolve => {
+const getParties = async (ctx: ApiContext): Promise<unknown> => new Promise<void>(async resolve => {
     switch (ctx.params.idType) {
         case PartyIdType.MSISDN:
             await handlePartyLookupByMSISDN(ctx);

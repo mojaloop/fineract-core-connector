@@ -14,8 +14,8 @@
 import * as util from 'util';
 import axios, {
     AxiosInstance,
-    AxiosRequestConfig,
     AxiosResponse,
+    InternalAxiosRequestConfig,
 } from 'axios';
 import { Logger } from '@mojaloop/sdk-standard-components';
 
@@ -47,7 +47,7 @@ export abstract class BaseRequester {
         this.axiosInstance = axios.create(opts);
 
         // add interceptor to log request
-        this.axiosInstance.interceptors.request.use((req: AxiosRequestConfig) => {
+        this.axiosInstance.interceptors.request.use((req: InternalAxiosRequestConfig) => {
             this.options.logger.push({
                 axiosRequest: {
                     baseURL: req?.baseURL,

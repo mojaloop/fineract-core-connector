@@ -16,7 +16,7 @@ import {
     IPartiesByIdParams,
     IPostQuotesBody,
     ITransferContinuationQuote,
-} from '~/interfaces';
+} from '../../interfaces';
 import { buildJSONHeaders } from '../headers';
 import { BaseRequester } from '../baseRequester';
 

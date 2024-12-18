@@ -14,7 +14,7 @@
 import { AxiosResponse } from 'axios';
 import { buildJSONHeaders } from '../headers';
 import { BaseRequester } from '../baseRequester';
-import { IFineractClient, IFineractClientAccounts, IFineractPostTransactionBody, IFineractPostTransactionResponse } from '~interfaces';
+import { IFineractClient, IFineractClientAccounts, IFineractPostTransactionBody, IFineractPostTransactionResponse } from '../../interfaces';
 
 export default class Requester extends BaseRequester {
     lookupTransferParty = (msisdn: string): Promise<AxiosResponse<any>> => this.axiosInstance.get('/search', { headers: buildJSONHeaders(), params: { query: `${msisdn}`, resource: 'clients' } });

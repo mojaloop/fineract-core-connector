@@ -17,7 +17,7 @@ import {
     IPostQuotesResponseBody,
     ITransferParty, PayerType,
     TransactionType,
-} from '~/interfaces/common';
+} from './common';
 
 
 export interface IPostQuoteRequestBody {

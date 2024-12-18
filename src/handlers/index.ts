@@ -11,7 +11,7 @@
  *       James Bush - jbush@mojaloop.io                                   *
  *************************************************************************/
 
-import { ApiContext, HandlerMap } from '~types';
+import { ApiContext, HandlerMap } from '../types';
 import { InboundHandlers } from './inbound';
 import { OutboundHandlers } from './outbound';
 
