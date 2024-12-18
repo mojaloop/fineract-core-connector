@@ -12,23 +12,11 @@
  *************************************************************************/
 
 
-// eslint-disable-next-line no-async-promise-executor
 import { ApiContext } from '~/types';
-//import { IGeneralError } from '~/errors';
 
 
-// const handleError = (err: Error, ctx: ApiContext, responseCode = 500) => {
-//     ctx.state.logger.error(err);
-//     ctx.response.type = 'text/plain';
-//     ctx.response.body = err.toString();
-//     ctx.response.status = (err as unknown as IGeneralError)?.httpResponseCode || responseCode;
-// };
-
-
-const sendMoney = async (ctx: ApiContext): Promise<void> => new Promise(async (
-    resolve,
-    // reject,
-) => {
+// eslint-disable-next-line no-async-promise-executor
+const sendMoney = async (ctx: ApiContext): Promise<unknown> => new Promise(async resolve => {
     const response = {
         idType: ctx.params.idType,
         idValue: ctx.params.idValue,

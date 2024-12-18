@@ -33,6 +33,116 @@ const handleError = (err: Error, ctx: ApiContext, responseCode = 500) => {
 };
 
 
+const getInboundRequester = (ctx: ApiContext): InboundRequester => {
+    const inboundRequesterOps: RequesterOptions = {
+        baseURL: ctx.state.conf.backendEndpoint,
+        timeout: ctx.state.conf.requestTimeout,
+        logger: ctx.state.logger,
+        additionalHeaders: {
+            Authorization: `Basic ${ctx.state.conf.backendBasicAuth}`,
+            'Fineract-Platform-TenantId': `${ctx.state.conf.backendTenantId}`,
+        },
+    };
+    return new InboundRequester(inboundRequesterOps);
+};
+
+
+const getFineractClientAccounts = async (clientId: number, ctx: ApiContext): Promise<IFineractClientAccounts> => {
+    // do a lookup in the fineract backend API
+    const inboundRequester: InboundRequester = getInboundRequester(ctx);
+
+    const clientAccounts = await inboundRequester.getClientAccounts(clientId);
+    return clientAccounts.data;
+};
+
+
+const validateClientAccount = async (clientId: number, currency: string, ctx: ApiContext) => {
+    // check the party has the appropriate account to receive this transfer type
+    const clientAccounts: IFineractClientAccounts = await getFineractClientAccounts(clientId, ctx);
+
+    // we target the first account the user has of the configured type
+    const targetAccount = clientAccounts.savingsAccounts
+        .find(a => a.shortProductName === ctx.state.conf.targetFineractAccountShortName);
+
+    if(!targetAccount) {
+        throw new Error('Client does not have an account of the configured type');
+    }
+
+    if(!targetAccount.status.active
+        || targetAccount.subStatus.block
+        || targetAccount.subStatus.blockCredit) {
+        throw new Error('Client account is not able to accept deposits');
+    }
+
+    // check the target account is in the requested currency
+    if(targetAccount.currency.code !== currency) {
+        throw new Error('Client account is not in requested currency');
+    }
+
+    return targetAccount;
+};
+
+
+const getFineractClientByMSISDN = async (msisdn: string, ctx: ApiContext): Promise<IFineractClient> => {
+    // do a lookup in the fineract backend API
+    const inboundRequester = getInboundRequester(ctx);
+
+    // run a search on the fineract API to look for an entity with matching MSISDN
+    // note that fineract doesnt support a direct lookup on MSISDN so we have to use the search API which will
+    // return results for parties with full or partial matches of MSISDN against their fineract phone no. field.
+    const backendResponse = await inboundRequester.lookupTransferParty(msisdn);
+    const entities: IFineractSearchResponse = backendResponse.data as IFineractSearchResponse;
+
+    ctx.state.logger.log(`Got party search response from fineract for msisdn '${msisdn}': ${util.inspect(entities)}`);
+
+    if(entities.length < 1) {
+        // this is a 404
+        throw new Error('No matching party found');
+    }
+
+    if(entities.length > 1) {
+        // more than 1 client with same mobile number. allowable in fineract but a problem for our world.
+        // todo: how to resolve to the correct customer?
+        throw new Error(`Found more than 1 party (${entities.length}) with specified identifier`);
+    }
+
+    if(entities[0].entityMobileNo !== msisdn) {
+        // oops, the msisdn is not a perfect match. fineract search may have been optimistic
+        throw new Error('No matching party found');
+    }
+
+    // now get the full details on this fineract client (customer)
+    const client = await inboundRequester.getClient(entities[0].entityId);
+    return client.data;
+};
+
+
+// eslint-disable-next-line consistent-return
+const handlePartyLookupByMSISDN = async (ctx: ApiContext): Promise<void> => {
+    try {
+        const client: IFineractClient = await getFineractClientByMSISDN(ctx.params.idValue, ctx);
+
+        // check the client is active
+        if(!client.active) {
+            // client is not active, respond with a not found
+            return handleError(new Error('Party found but is not active'), ctx, 404);
+        }
+
+        ctx.response.body = {
+            idType: ctx.params.idType,
+            idValue: ctx.params.idValue,
+            displayName: client.displayName,
+            firstName: client.firstname,
+            lastName: client.lastname,
+        };
+        ctx.response.status = 200;
+    } catch (e: any) {
+        ctx.state.logger.log(`Error making request to Fineract API: ${e}`);
+        return handleError(e, ctx, 500);
+    }
+};
+
+
 const postQuotes = async (ctx: ApiContext): Promise<void> => {
     const payload = ctx.request.body as unknown as IPostQuoteRequestBody;
 
@@ -135,7 +245,8 @@ const postTransfers = async (ctx: ApiContext): Promise<void> => {
 };
 
 
-const getParties = async (ctx: ApiContext): Promise<void> => new Promise(async resolve => {
+// eslint-disable-next-line no-async-promise-executor
+const getParties = async (ctx: ApiContext): Promise<unknown> => new Promise(async resolve => {
     switch (ctx.params.idType) {
         case PartyIdType.MSISDN:
             await handlePartyLookupByMSISDN(ctx);
@@ -146,117 +257,6 @@ const getParties = async (ctx: ApiContext): Promise<void> => new Promise(async r
             return resolve();
     }
 });
-
-
-const validateClientAccount = async (clientId: number, currency: string, ctx: ApiContext) => {
-    // check the party has the appropriate account to receive this transfer type
-    const clientAccounts: IFineractClientAccounts = await getFineractClientAccounts(clientId, ctx);
-
-    // we target the first account the user has of the configured type
-    const targetAccount =
-        clientAccounts.savingsAccounts.find(a =>
-            a.shortProductName === ctx.state.conf.targetFineractAccountShortName);
-
-    if(!targetAccount) {
-        throw new Error('Client does not have an account of the configured type');
-    }
-
-    if(!targetAccount.status.active
-        || targetAccount.subStatus.block
-        || targetAccount.subStatus.blockCredit) {
-        throw new Error('Client account is not able to accept deposits');
-    }
-
-    // check the target account is in the requested currency
-    if(targetAccount.currency.code !== currency) {
-        throw new Error('Client account is not in requested currency');
-    }
-
-    return targetAccount;
-};
-
-
-const getInboundRequester = (ctx: ApiContext): InboundRequester => {
-    const inboundRequesterOps: RequesterOptions = {
-        baseURL: ctx.state.conf.backendEndpoint,
-        timeout: ctx.state.conf.requestTimeout,
-        logger: ctx.state.logger,
-        additionalHeaders: {
-            Authorization: `Basic ${ctx.state.conf.backendBasicAuth}`,
-            'Fineract-Platform-TenantId': `${ctx.state.conf.backendTenantId}`,
-        },
-    };
-    return new InboundRequester(inboundRequesterOps);
-}
-
-
-const getFineractClientAccounts = async (clientId: number, ctx: ApiContext): Promise<IFineractClientAccounts> => {
-    // do a lookup in the fineract backend API
-    const inboundRequester: InboundRequester = getInboundRequester(ctx);
-
-    const clientAccounts = await inboundRequester.getClientAccounts(clientId);
-    return clientAccounts.data;
-};
-
-
-const getFineractClientByMSISDN = async (msisdn: string, ctx: ApiContext): Promise<IFineractClient> => {
-    // do a lookup in the fineract backend API
-    const inboundRequester = getInboundRequester(ctx);
-
-    // run a search on the fineract API to look for an entity with matching MSISDN
-    // note that fineract doesnt support a direct lookup on MSISDN so we have to use the search API which will
-    // return results for parties with full or partial matches of MSISDN against their fineract phone no. field.
-    const backendResponse = await inboundRequester.lookupTransferParty(msisdn);
-    const entities: IFineractSearchResponse = backendResponse.data as IFineractSearchResponse;
-
-    ctx.state.logger.log(`Got party search response from fineract for msisdn '${msisdn}': ${util.inspect(entities)}`);
-
-    if(entities.length < 1) {
-        // this is a 404
-        throw new Error('No matching party found');
-    }
-
-    if(entities.length > 1) {
-        // more than 1 client with same mobile number. allowable in fineract but a problem for our world.
-        // todo: how to resolve to the correct customer?
-        throw new Error(`Found more than 1 party (${entities.length}) with specified identifier`);
-    }
-
-    if(entities[0].entityMobileNo !== msisdn) {
-        // oops, the msisdn is not a perfect match. fineract search may have been optimistic
-        throw new Error('No matching party found');
-    }
-
-    // now get the full details on this fineract client (customer)
-    const client = await inboundRequester.getClient(entities[0].entityId);
-    return client.data;
-};
-
-
-const handlePartyLookupByMSISDN = async (ctx: ApiContext): Promise<void> => {
-    try {
-        const client: IFineractClient = await getFineractClientByMSISDN(ctx.params.idValue, ctx);
-
-        // check the client is active
-        if(!client.active) {
-            // client is not active, respond with a not found
-            return handleError(new Error('Party found but is not active'), ctx, 404);
-        }
-
-        ctx.response.body = {
-            idType: ctx.params.idType,
-            idValue: ctx.params.idValue,
-            displayName: client.displayName,
-            firstName: client.firstname,
-            lastName: client.lastname,
-        };
-        ctx.response.status = 200;
-    } catch (e: any) {
-        ctx.state.logger.log(`Error making request to Fineract API: ${e}`);
-        return handleError(e, ctx, 500);
-    }
-};
-
 
 export const InboundHandlers = {
     postQuotes,

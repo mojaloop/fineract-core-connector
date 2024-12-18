@@ -16,7 +16,7 @@ import {
     IExtensionItem,
     IPostQuotesResponseBody,
     ITransferParty, PayerType,
-    TransactionType
+    TransactionType,
 } from '~/interfaces/common';
 
 

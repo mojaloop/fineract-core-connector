@@ -137,23 +137,23 @@ export interface IFineractClientAccounts {
 }
 
 export interface IFineractPostTransactionBody {
-    locale: string, //"en",
-    dateFormat: string, //"dd MMMM yyyy",
-    transactionDate: string, //"10 October 2024",
-    transactionAmount: number, //1000,
-    paymentTypeId: number //1,  // Change this to match your payment type
-    receiptNumber: string, //"moja1",
-    bankNumber: string, //"1234567890"
+    locale: string, // "en",
+    dateFormat: string, // "dd MMMM yyyy",
+    transactionDate: string, // "10 October 2024",
+    transactionAmount: number, // 1000,
+    paymentTypeId: number // 1,  // Change this to match your payment type
+    receiptNumber: string, // "moja1",
+    bankNumber: string, // "1234567890"
 }
 
 export interface IFineractPostTransactionResponse {
-    officeId: number, //1,
-    clientId: number, //1,
-    savingsId: number //3,
-    resourceId: number //4,
+    officeId: number, // 1,
+    clientId: number, // 1,
+    savingsId: number // 3,
+    resourceId: number // 4,
     changes: {
-        receiptNumber: string, //"moja1",
-        bankNumber: string, //"1234567890",
-        paymentTypeId: number, //1
+        receiptNumber: string, // "moja1",
+        bankNumber: string, // "1234567890",
+        paymentTypeId: number, // 1
     }
 }
