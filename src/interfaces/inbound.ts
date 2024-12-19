@@ -16,8 +16,8 @@ import {
     IExtensionItem,
     IPostQuotesResponseBody,
     ITransferParty, PayerType,
-    TransactionType
-} from '~/interfaces/common';
+    TransactionType,
+} from './common';
 
 
 export interface IPostQuoteRequestBody {
