@@ -10,8 +10,8 @@
   ],
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": ".",
+    "outDir": "build",
+    "rootDir": "./src",
     // prevents this tsconfig from compiling any files
     "target": "ES2022",
     "module": "commonjs",

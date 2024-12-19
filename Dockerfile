@@ -10,7 +10,7 @@ ARG NODE_VERSION=lts-alpine
 #    . \
 #
 
-FROM node:${NODE_VERSION} as builder
+FROM node:${NODE_VERSION} AS builder
 #RUN apk add --no-cache git python3 build-base
 WORKDIR /opt/app
 
