@@ -893,7 +893,7 @@ workflows:
             - vulnerability-check
             - audit-licenses
             - license-scan
-            - image-scan
+            # <Facing issues with anchore scanning for new image versions enable when issue resolved; add comment in release as disclaimer> - image-scan
           filters:
             branches:
               only:
