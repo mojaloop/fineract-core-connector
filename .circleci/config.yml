@@ -40,7 +40,7 @@ defaults_license_scanner: &defaults_license_scanner
 defaults_export_version_from_package: &defaults_export_version_from_package
   name: Format the changelog into the github release body and get release tag
   command: |
-    git diff --no-indent-heuristic master~1 HEAD CHANGELOG.md | sed -n '/^+[^+]/ s/^+//p' > /tmp/changes
+    git diff --no-indent-heuristic main~1 HEAD CHANGELOG.md | sed -n '/^+[^+]/ s/^+//p' > /tmp/changes
     echo 'export RELEASE_CHANGES=`cat /tmp/changes`' >> $BASH_ENV
     echo 'export RELEASE_TAG=`cat package-lock.json | jq -r .version`' >> $BASH_ENV
 
@@ -239,12 +239,12 @@ jobs:
       - run:
           name: Copy code coverage to SonarQube
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ];
+            if [ "${CIRCLE_BRANCH}" == "main" ];
             then
                 echo "Sending lcov.info to SonarQube..."
                 aws s3 cp coverage/lcov.info $AWS_S3_DIR_SONARQUBE/${CIRCLE_PROJECT_REPONAME}/lcov.info
             else
-                echo "Not a release (env CIRCLE_BRANCH != 'master'), skipping sending lcov.info to SonarQube."
+                echo "Not a release (env CIRCLE_BRANCH != 'main'), skipping sending lcov.info to SonarQube."
             fi
 
   test-integration:
@@ -879,7 +879,7 @@ workflows:
             branches:
               ignore:
                 - /.*/
-      # New commits to master release automatically
+      # New commits to main release automatically
       - release:
           context: org-global
           requires:
@@ -888,16 +888,14 @@ workflows:
             - test-lint
             - test-unit
             - test-coverage
-            #- test-integration
-            #- test-functional
             - vulnerability-check
             - audit-licenses
             - license-scan
-            # <Facing issues with anchore scanning for new image versions enable when issue resolved; add comment in release as disclaimer> - image-scan
+            # Facing issues with anchore scanning for new image versions enable when issue resolved; add comment in release as disclaimer - image-scan
           filters:
             branches:
               only:
-                - master
+                - main
                 - /release\/v.*/
       - github-release:
           context: org-global
@@ -906,7 +904,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
                 - /release\/v.*/
       - publish:
           context: org-global
@@ -916,12 +914,10 @@ workflows:
             - test-lint
             - test-unit
             - test-coverage
-            #- test-integration
-            #- test-functional
             - vulnerability-check
             - audit-licenses
             - license-scan
-            # <Facing issues with anchore scanning for new image versions enable when issue resolved; add comment in release as disclaimer> - image-scan
+            # Facing issues with anchore scanning for new image versions enable when issue resolved; add comment in release as disclaimer - image-scan
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*/
