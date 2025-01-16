@@ -1,6 +1,6 @@
 {
   "name": "@mojaloop/itk-fineract-core-connector",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Typescript Mojaloop ITK Core Connector for Apache Fineract",
   "repository": {
     "type": "git",
